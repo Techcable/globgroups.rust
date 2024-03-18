@@ -1,4 +1,4 @@
-use crate::{GlobExpr, GlobExprKind, Text};
+use crate::{GlobExpr, GlobExprKind, Literal};
 use itertools::{Itertools, Product};
 /// The underlying expansion
 ///
@@ -27,10 +27,10 @@ impl Iterator for ExpandGlobIter<'_> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.state.next().map(|parts| {
-            let total_len = parts.iter().map(|part| part.len()).sum();
+            let total_len = parts.iter().map(|part| part.text().len()).sum();
             let mut buffer = String::with_capacity(total_len);
             for part in parts.into_iter().rev() {
-                buffer.push_str(part);
+                buffer.push_str(part.text());
             }
             assert_eq!(buffer.len(), total_len);
             buffer
@@ -71,9 +71,9 @@ impl<'a> Iterator for FlattenGroupChildren<'a> {
 #[derive(Clone, Debug)]
 enum ExpandState<'a> {
     Finished,
-    Literal(&'a Text),
+    Literal(&'a Literal),
     Group {
-        prefix: &'a Text,
+        prefix: &'a Literal,
         product: Box<Product<FlattenGroupChildren<'a>, ExpandState<'a>>>,
     },
     /// Temporary state used for updates
@@ -153,9 +153,24 @@ impl GlobGroup {
             kind: GlobExprKind::Group(Box::new(self)),
         }
     }
+
+    pub fn write_equivalent_expr(&self, buffer: &mut String) {
+        self.prefix.write_equivalent_expr(buffer);
+        if !self.children.is_empty() {
+            buffer.push('{');
+            for (index, child) in self.children.iter().enumerate() {
+                if index > 0 {
+                    buffer.push(',');
+                }
+                child.write_equivalent_expr(buffer);
+            }
+            buffer.push('}');
+        }
+        self.suffix.write_equivalent_expr(buffer);
+    }
 }
 
 /// An in-progress expansion
 ///
 /// This stores a single element inline to avoid allocations.
-type ExpandBuffer<'a> = smallvec::SmallVec<&'a Text, 1>;
+type ExpandBuffer<'a> = smallvec::SmallVec<&'a Literal, 1>;
