@@ -21,4 +21,6 @@ fn simple() {
 ```
 
 ## Notes
-There is an old python version in `misc/globgroups.py`
+There is a pure-python version of this library [globgroups.py](https://github.com/Techcable/globgroups.py).
+
+There is an older (and much buggier) single-file python version in `misc/globgroups.py`
