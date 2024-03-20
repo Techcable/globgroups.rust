@@ -13,11 +13,6 @@ itertools = "0.12.1"
 smallvec = "~2.0.0-alpha.4"  # TODO: Replace with stable release?
 # Use chumsky for parsing
 chumsky = "0.9"
-# Allow serde deserialization
-serde = { version = "1", optional = true }
-
-[features]
-serde = ["dep:serde"]
 
 [dev-dependencies]
 pretty_assertions = "1.4"
